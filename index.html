@@ -213,6 +213,7 @@ footer{max-width:1560px;margin:0 auto;padding:0 20px 30px;color:var(--mut);font-
   <div class="hbar">
     <div class="brand"><img alt="" id="logo2"><div><div class="t">ONROAD <b>MALAPPURAM</b></div><small>Painter Performance Dashboard</small></div></div>
     <div class="status" title="Data refreshes automatically from the Google Sheet"><span class="dot" id="dot"></span><span class="txt" id="stx">Loading…</span></div>
+    <label style="display:flex;align-items:center;gap:8px;color:#fff;font-size:12px;font-weight:600"><span>Target consumption:</span><input type="number" id="tgtInput" min="5" max="50" step="0.5" style="width:50px;padding:6px 8px;border:1px solid #ffffff26;border-radius:6px;background:#ffffff0a;color:#fff;font-weight:600" title="Set target consumption %"></label>
     <button class="ib" id="refresh" title="Refresh data now"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg><span class="txt">Refresh</span></button>
     <button class="ib" id="theme" title="Toggle light / dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
   </div>
@@ -228,22 +229,13 @@ footer{max-width:1560px;margin:0 auto;padding:0 20px 30px;color:var(--mut);font-
       <div class="fbody fin">
         <label class="f"><span>Painter</span><select data-k="painter"></select></label>
         <label class="f"><span>Advisor</span><select data-k="adv"></select></label>
-        <label class="f"><span>Marketing Exec.</span><select data-k="mkt"></select></label>
+        <label class="f"><span>Tinker</span><select data-k="tinker"></select></label>
         <label class="f"><span>Category</span><select data-k="cat"></select></label>
         <label class="f"><span>Vehicle Make</span><select data-k="make"></select></label>
       </div>
       <div style="display:flex;gap:8px;margin-left:auto">
         <button class="btn s ftoggle" id="ftog">More filters</button>
         <button class="btn s" id="reset">Reset all</button>
-      </div>
-    </div>
-    <div class="fbody">
-      <div class="fsep"></div>
-      <div class="sliders">
-        <div class="sl"><div class="hd"><span>Target consumption %</span><b id="vTgt">–</b></div><input type="range" id="sTgt" min="5" max="50" step="0.5" aria-label="Target consumption percent"></div>
-        <div class="sl"><div class="hd"><span>Jobcard consumption % range</span><b id="vP">–</b></div><div class="dual"><div class="trk"></div><div class="rng" id="pRng"></div><input type="range" id="sPmin" min="0" max="100" step="1" aria-label="Minimum consumption percent"><input type="range" id="sPmax" min="0" max="100" step="1" aria-label="Maximum consumption percent"></div></div>
-        <div class="sl"><div class="hd"><span>Min. vehicles to rank</span><b id="vMin">–</b></div><input type="range" id="sMin" min="1" max="15" step="1" aria-label="Minimum vehicles to rank"></div>
-        <div class="sl"><div class="hd"><span>Show top N in charts</span><b id="vTop">–</b></div><input type="range" id="sTop" min="5" max="30" step="1" aria-label="Top N in charts"></div>
       </div>
     </div>
     <div class="chips" id="chips"></div>
@@ -273,7 +265,7 @@ footer{max-width:1560px;margin:0 auto;padding:0 20px 30px;color:var(--mut);font-
     </div>
     <div class="grid g3">
       <div class="card"><h3>Advisor contribution</h3><p class="hint">Labour billed by advisor</p><div class="cv s"><canvas id="cOvAdv"></canvas></div></div>
-      <div class="card"><h3>Marketing executive contribution</h3><p class="hint">Labour billed by marketing executive</p><div class="cv s"><canvas id="cOvMkt"></canvas></div><div id="mktNote"></div></div>
+      <div class="card"><h3>Tinker contribution</h3><p class="hint">Labour billed by tinker</p><div class="cv s"><canvas id="cOvTinker"></canvas></div><div id="tinkerNote"></div></div>
       <div class="card"><h3>Top vehicle makes</h3><p class="hint">Billed vehicles by make</p><div class="cv s"><canvas id="cOvMake"></canvas></div></div>
     </div>
   </section>
@@ -343,7 +335,7 @@ const COLS={
   make:['maker','vehiclemake','make'],model:['model','vehiclemodel'],cust:['customername','customer'],cc:['cashclaim','billingtype'],ins:['insurance'],
   mkt:['marketingexecutive','marketingexecutiveassigned','marketingexec','mktexecutive','marketingexe','marketing'],
   adv:['advisor','advisorassigned','serviceadvisor'],lab:['laborexcltax','labourexcltax','labour','labor','labouramount'],pan:['noofpanel','noofpanels','panels','panel'],
-  painter:['painter','paintername'],tinker:['tinker'],cons:['consumptionamount','consumptionamunt','consumption','paintamount'],pct:['consumption%','%consumption','consumptionpercent'],cat:['category']};
+  painter:['painter','paintername'],tinker:['tinker','tinkername'],cons:['consumptionamount','consumptionamunt','consumption','paintamount'],pct:['consumption%','%consumption','consumptionpercent'],cat:['category']};
 
 /* pcc tab (paint mixing system export) – used to fill Paint amount / panels when the Invoice row is blank */
 function pccMap(a){const m={byJob:new Map(),byReg:new Map(),n:0};if(!a||!a.length)return m;let hr=-1,ix={};
@@ -369,11 +361,11 @@ function mapRows(a,P){P=P||{byJob:new Map(),byReg:new Map(),n:0};let hr=-1,map={
 const DIMS=[
   {id:'painter',key:'painter',title:'Painter',plural:'Painters',icon:'<path d="M18 3H6a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zM12 10v4M10 14h4v7h-4z"/>'},
   {id:'adv',key:'adv',title:'Advisor',plural:'Advisors',icon:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'},
-  {id:'mkt',key:'mkt',title:'Marketing Executive',plural:'Marketing',icon:'<path d="M3 11v3a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1zM16 8a5 5 0 0 1 0 8M19 5a9 9 0 0 1 0 14"/>'},
+  {id:'tinker',key:'tinker',title:'Tinker',plural:'Tinkers',icon:'<path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2m0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8m3.5-9c.8 0 1.5-.7 1.5-1.5S16.3 8 15.5 8 14 8.7 14 9.5s.7 1.5 1.5 1.5m-7 0c.8 0 1.5-.7 1.5-1.5S9.3 8 8.5 8 7 8.7 7 9.5 7.7 11 8.5 11m3.5 6.5c2.3 0 4.3-1.3 5.3-3H6.2c1 1.7 3 3 5.3 3"/>'},
   {id:'cat',key:'cat',title:'Category',plural:'Category',icon:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'},
   {id:'make',key:'make',title:'Vehicle Make',plural:'Vehicles',icon:'<path d="M5 17h14M5 17a2 2 0 1 0 4 0M15 17a2 2 0 1 0 4 0M3 17v-5l2-5h14l2 5v5"/>'}];
 const PAGES=[{id:'overview',t:'Overview',icon:'<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>'},...DIMS.map(d=>({id:d.id,t:d.plural,icon:d.icon})),{id:'jobs',t:'Jobcards',icon:'<path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1zM8 6H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2M8 12h8M8 16h5"/>'}];
-const S={rows:[],page:ls.get('page','overview'),month:null,f:{painter:'',adv:'',mkt:'',cat:'',make:''},pmin:0,pmax:100,pcap:100,tgt:null,minv:ls.get('minv',2),topn:ls.get('topn',15),
+const S={rows:[],page:ls.get('page','overview'),month:null,f:{painter:'',adv:'',tinker:'',cat:'',make:''},pmin:0,pmax:100,pcap:100,tgt:null,minv:ls.get('minv',2),topn:ls.get('topn',15),
   sort:{},jsort:{k:'date',d:-1},jp:0,trend:'lab',charts:{},loadedAt:null,src:'',hasMkt:true,hasCat:true,pccN:0};
 
 /* ================= DATA LOAD ================= */
@@ -401,7 +393,7 @@ function apply(rows,at,first){const prevMonths=S.months?S.months.join():'';S.row
   const mx=Math.max(0,...rows.map(r=>r.pct??0));const cap=Math.min(200,Math.max(50,Math.ceil(mx/10)*10));
   const wasFull=S.pmax>=S.pcap;S.pcap=cap;if(first||wasFull)S.pmax=cap;S.pmax=Math.min(S.pmax,cap);S.pmin=Math.min(S.pmin,S.pmax);
   const saved=ls.get('tgt',null);if(saved!=null)S.tgt=saved;else{const t=tot(rows.filter(r=>mkey(r.date)===S.months[0]));S.tgt=t.pct?Math.round(t.pct*2)/2:20}
-  buildMonth();syncControls();render()}
+  $('tgtInput').value=S.tgt;buildMonth();syncControls();render()}
 
 /* ================= AGGREGATION ================= */
 // Consumption % = paint amount ÷ labour (excl. tax), counting only jobcards that have a paint amount entered
@@ -441,14 +433,10 @@ function buildDimPages(){$('dimPages').innerHTML=DIMS.map(d=>`
 </section>`).join('')}
 function buildMonth(){$('fMonth').innerHTML=S.months.map(m=>`<option value="${m}">${mlabel(m)}</option>`).join('')+'<option value="all">All months</option>';$('fMonth').value=S.month}
 function buildSelects(){const b=base();document.querySelectorAll('select[data-k]').forEach(sel=>{const k=sel.dataset.k;sel.closest('label').hidden=(k==='mkt'&&!S.hasMkt)||(k==='cat'&&!S.hasCat);const u=[...new Set(b.map(r=>r[k]))].sort();if(S.f[k]&&!u.includes(S.f[k]))S.f[k]='';sel.innerHTML=`<option value="">All</option>`+u.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');sel.value=S.f[k]})}
-function syncSliders(){const cap=S.pcap;$('sTgt').value=S.tgt;$('vTgt').textContent=S.tgt+'%';
-  ['sPmin','sPmax'].forEach(i=>$(i).max=cap);$('sPmin').value=S.pmin;$('sPmax').value=S.pmax;const a=S.pmin/cap*100,b=S.pmax/cap*100;$('pRng').style.left=a+'%';$('pRng').style.width=Math.max(0,b-a)+'%';
-  $('vP').textContent=pOn()?`${S.pmin}% – ${S.pmax}%`:'All jobcards';$('sMin').value=S.minv;$('vMin').textContent=S.minv+(S.minv>1?' vehicles':' vehicle');$('sTop').value=S.topn;$('vTop').textContent=S.topn}
 function syncControls(){
   const ch=[];Object.entries(S.f).forEach(([k,v])=>{if(v){const d=DIMS.find(x=>x.key===k);ch.push(`<span class="chip">${d.title}: ${esc(v)}<button data-x="${k}" aria-label="Remove">×</button></span>`)}});
   if($('fFrom').value||$('fTo').value)ch.push(`<span class="chip">Dates: ${$('fFrom').value||'…'} → ${$('fTo').value||'…'}<button data-x="dates">×</button></span>`);
-  if(pOn())ch.push(`<span class="chip">Consumption ${S.pmin}% – ${S.pmax}%<button data-x="pct">×</button></span>`);
-  $('chips').innerHTML=ch.join('');syncSliders()}
+  $('chips').innerHTML=ch.join('')}
 
 /* ================= CHARTS ================= */
 const tgtPlugin={id:'tgt',afterDatasetsDraw(c,a,o){if(o==null||o.value==null)return;const{ctx,chartArea:ca}=c;const horiz=c.options.indexAxis==='y';const sc=horiz?c.scales.x:c.scales.y;const p=sc.getPixelForValue(o.value);if(!isFinite(p))return;ctx.save();ctx.strokeStyle=css('--bad');ctx.lineWidth=1.5;ctx.setLineDash([6,4]);ctx.beginPath();if(horiz){ctx.moveTo(p,ca.top);ctx.lineTo(p,ca.bottom)}else{ctx.moveTo(ca.left,p);ctx.lineTo(ca.right,p)}ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=css('--bad');ctx.font='600 11px Inter, system-ui, sans-serif';const lbl='Target '+o.value+'%';if(horiz){ctx.textAlign='left';ctx.fillText(lbl,Math.min(p+4,ca.right-70),ca.top+10)}else{ctx.textAlign='right';ctx.fillText(lbl,ca.right-2,p-5)}ctx.restore()}};
@@ -528,8 +516,8 @@ function renderOverview(rs){const T=tot(rs),P=prevMonthTot();
     options:{responsive:true,maintainAspectRatio:false,cutout:'64%',plugins:{legend:{position:'right',labels:{usePointStyle:true,pointStyle:'rectRounded',color:css('--ink2')}},tooltip:{backgroundColor:'#0b1730',callbacks:{label:c=>useVeh?`${c.label}: ${c.parsed} vehicles`:`${c.label}: ${inr(c.parsed)} (${cg[c.dataIndex].pshare.toFixed(1)}%)`}}},onClick:(e,el)=>{if(el.length)clickFilter('cat',cg[el[0].index].name)}}});
   $('catMini').innerHTML=`<div class="tw"><table><thead><tr><th>Category</th><th class="n">Veh</th><th class="n">Labour</th><th class="n">Cons %</th></tr></thead><tbody>${cg.map((o,i)=>`<tr class="clk" data-n="${esc(o.name)}"><td><span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${cc[i%5]};margin-right:7px"></span>${esc(o.name)}</td><td class="n">${o.veh}</td><td class="n">${inrC(o.lab)}</td><td class="n ${o.pct==null?'':o.pct>S.tgt?'over':'under'}">${pc(o.pct)}</td></tr>`).join('')}</tbody></table></div>`+(cg.every(o=>o.name==='(BLANK)')?`<div class="note mini"><i>ⓘ</i><span>The <b>category</b> column is empty — fill it (e.g. Full Body, Panel, Touch-up) to see the mix.</span></div>`:'');
   $('catMini').querySelector('tbody').onclick=e=>{const tr=e.target.closest('tr[data-n]');if(tr)clickFilter('cat',tr.dataset.n)};
-  hbar('cOvAdv',group(rs,'adv'),'adv','lab',css('--c1'));hbar('cOvMkt',group(rs,'mkt'),'mkt','lab',css('--c3'));hbar('cOvMake',group(rs,'make'),'make','veh',css('--c4'));
-  $('mktNote').innerHTML=S.hasMkt?'':`<div class="note mini"><i>ⓘ</i><span>No <b>Marketing Executive</b> column in the Invoice sheet yet. Add one with that header and it appears here automatically.</span></div>`}
+  hbar('cOvAdv',group(rs,'adv'),'adv','lab',css('--c1'));hbar('cOvTinker',group(rs,'tinker'),'tinker','lab',css('--c3'));hbar('cOvMake',group(rs,'make'),'make','veh',css('--c4'));
+  $('tinkerNote').innerHTML=''}
 function hbar(id,g,key,metric,color){g=[...g].sort((a,b)=>b[metric]-a[metric]).slice(0,8);
   mk(id,{type:'bar',data:{labels:g.map(o=>trunc(o.name)),datasets:[{data:g.map(o=>o[metric]),backgroundColor:g.map(o=>S.f[key]&&S.f[key]!==o.name?color+'55':color),borderRadius:4,borderSkipped:'start',maxBarThickness:20}]},
     options:baseOpts({indexAxis:'y',interaction:{mode:'nearest',axis:'y',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{title:c=>g[c[0].dataIndex].name,label:c=>metric==='veh'?c.parsed.x+' vehicles':inr(c.parsed.x),afterLabel:c=>{const o=g[c.dataIndex];return`${o.veh} veh · consumption ${pc(o.pct)}`}}}},
@@ -537,7 +525,7 @@ function hbar(id,g,key,metric,color){g=[...g].sort((a,b)=>b[metric]-a[metric]).s
 
 function renderDim(d,rs){const sec=$('pg-'+d.id),q=sel=>sec.querySelector(sel);const rsx=filtered({skip:d.key});// keep other members visible for comparison
   const g=group(rsx,d.key),T=tot(rsx),rk=rankable(g).sort((a,b)=>a.pct-b.pct);
-  q('[data-note]').innerHTML=d.key==='mkt'&&!S.hasMkt?`<div class="note"><i>ⓘ</i><span>The Invoice sheet has no <b>Marketing Executive</b> column yet, so every jobcard shows as (BLANK). Add a column with the header “Marketing Executive” and fill it — this page will fill in on the next refresh.</span></div>`:(rsx.length&&rsx.every(r=>r[d.key]==='(BLANK)')?`<div class="note"><i>ⓘ</i><span>The <b>${d.title.toLowerCase()}</b> column is empty for this period. Fill it in the Invoice sheet and this page updates automatically.</span></div>`:'');
+  q('[data-note]').innerHTML=rsx.length&&rsx.every(r=>r[d.key]==='(BLANK)')?`<div class=”note”><i>ⓘ</i><span>The <b>${d.title.toLowerCase()}</b> column is empty for this period. Fill it in the Invoice sheet and this page updates automatically.</span></div>`:'';
   q('[data-sub]').textContent=`${g.length} ${d.plural.toLowerCase()} · ${T.veh} billed vehicles${S.f[d.key]?' · highlighting '+S.f[d.key]:''}`;
   const best=rk[0],worst=rk[rk.length-1],topLab=[...g].sort((a,b)=>b.lab-a.lab)[0],over=g.filter(o=>o.pct!=null&&o.pct>S.tgt).length;
   q('[data-kpi]').innerHTML=kpiHTML([[d.plural==='Category'?'Categories':(d.plural==='Marketing'?'Marketing execs':d.plural==='Vehicles'?'Vehicle makes':d.plural),nf(g.length),`${over} above target`],['Billed vehicles',nf(T.veh),inrC(T.lab)+' labour'],['Consumption %',pc(T.pct),tgtPill(T.pct),'hero'],
@@ -561,8 +549,8 @@ function renderDim(d,rs){const sec=$('pg-'+d.id),q=sel=>sec.querySelector(sel);c
     options:baseOpts({interaction:{mode:'nearest',intersect:true},plugins:{legend:{display:false},tgt:{value:S.tgt},tooltip:{callbacks:{title:c=>c[0].raw.o.name,label:c=>{const o=c.raw.o;return[`Consumption ${pc(o.pct)}`,`Labour ${inr(o.lab)}`,`Paint ${inr(o.cons)}`,`${o.veh} vehicles`]}}}},
       scales:{x:{beginAtZero:true,title:{display:true,text:'Labour billed'},grid:{color:css('--grid')},border:{display:false},ticks:{callback:v=>inrC(v)}},y:{beginAtZero:true,suggestedMax:Math.ceil((S.tgt||20)*1.3),title:{display:true,text:'Consumption %'},grid:{color:css('--grid')},border:{display:false},ticks:{callback:v=>v+'%'}}},onClick:(e,el)=>{if(el.length)clickFilter(d.key,gs[el[0].index].name)}})})}
 
-const JCALL=[['job','Jobcard No.'],['date','Invoice Date'],['inv','Invoice No.'],['reg','Reg No.'],['make','Make'],['model','Model'],['cat','Category'],['painter','Painter'],['adv','Advisor'],['mkt','Marketing Exec.'],['cc','Cash / Claim'],['pan','Panels','n'],['lab','Labour','n'],['cons','Paint Amount','n'],['pct','Consumption %','n']];
-const JC=()=>JCALL.filter(([k])=>(k!=='mkt'||S.hasMkt)&&(k!=='cat'||S.hasCat));
+const JCALL=[['job','Jobcard No.'],['date','Invoice Date'],['inv','Invoice No.'],['reg','Reg No.'],['make','Make'],['model','Model'],['cat','Category'],['painter','Painter'],['adv','Advisor'],['tinker','Tinker'],['cc','Cash / Claim'],['pan','Panels','n'],['lab','Labour','n'],['cons','Paint Amount','n'],['pct','Consumption %','n']];
+const JC=()=>JCALL.filter(([k])=>(k!=='tinker'||true)&&(k!=='cat'||S.hasCat));
 function renderJobs(rs){const T=tot(rs);const over=rs.filter(r=>r.pct!=null&&r.pct>S.tgt);const cols=JC();
   $('jbSub').textContent=`${rs.length} invoice rows · ${T.veh} unique jobcards · paint entered for ${T.pj}`;
   const sorted=[...rs].filter(r=>r.pct!=null).sort((a,b)=>a.pct-b.pct);const med=sorted.length?sorted[Math.floor(sorted.length/2)].pct:null;
@@ -572,7 +560,7 @@ function renderJobs(rs){const T=tot(rs);const over=rs.filter(r=>r.pct!=null&&r.p
   const pts=rs.filter(r=>r.lab!=null&&r.cons!=null);
   mk('cJobSc',{type:'scatter',data:{datasets:[{data:pts.map(r=>({x:r.lab,y:r.cons,r})),pointRadius:5,pointHoverRadius:8,backgroundColor:pts.map(r=>(r.pct>S.tgt?css('--bad'):css('--c1'))+'bb'),borderColor:css('--card'),borderWidth:1}]},
     options:baseOpts({interaction:{mode:'nearest',intersect:true},plugins:{legend:{display:false},tooltip:{callbacks:{title:c=>c[0].raw.r.job+' · '+c[0].raw.r.make+' '+c[0].raw.r.model,label:c=>{const r=c.raw.r;return[`Painter ${r.painter}`,`Labour ${inr(r.lab)} · Paint ${inr(r.cons)}`,`Consumption ${pc(r.pct)}`]}}}},scales:{x:{beginAtZero:true,title:{display:true,text:'Labour'},ticks:{callback:v=>inrC(v)},grid:{color:css('--grid')},border:{display:false}},y:{beginAtZero:true,title:{display:true,text:'Paint amount'},ticks:{callback:v=>inrC(v)},grid:{color:css('--grid')},border:{display:false}}}})});
-  const q=$('jSearch').value.toLowerCase();let L=rs.filter(r=>(!$('jOver').checked||r.pct>S.tgt)&&(!q||[r.job,r.reg,r.make,r.model,r.painter,r.adv,r.mkt,r.cat,r.inv,r.cust,r.tinker].join(' ').toLowerCase().includes(q)));
+  const q=$('jSearch').value.toLowerCase();let L=rs.filter(r=>(!$('jOver').checked||r.pct>S.tgt)&&(!q||[r.job,r.reg,r.make,r.model,r.painter,r.adv,r.tinker,r.cat,r.inv,r.cust].join(' ').toLowerCase().includes(q)));
   const st=S.jsort;L.sort((a,b)=>{const x=a[st.k],y=b[st.k];if(x==null)return 1;if(y==null)return-1;return(typeof x==='string'?x.localeCompare(y):x-y)*st.d});S.jl=L;
   const PS=20,pages=Math.max(1,Math.ceil(L.length/PS));S.jp=Math.min(S.jp,pages-1);
   $('jT').innerHTML=`<thead><tr>${cols.map(([k,l,n])=>`<th class="${n||''}" data-s="${k}">${l}${st.k===k?`<span class="ar">${st.d>0?'▲':'▼'}</span>`:''}</th>`).join('')}</tr></thead><tbody>${L.slice(S.jp*PS,S.jp*PS+PS).map(r=>`<tr>${cols.map(([k,,n])=>{const v=r[k];let s=k==='date'?fd(v):k==='lab'?inr(v):k==='cons'?(v==null?'–':nf(v,2)+(r.src==='pcc'?' <span title="from pcc sheet" style="color:var(--mut);font-size:11px">pcc</span>':'')):k==='pct'?pc(v):k==='pan'?(v==null?'–':nf(v,2).replace(/\.00$/,'')):esc(v);return`<td class="${n||''} ${k==='pct'&&v!=null?(v>S.tgt?'over':'under'):''}">${s}</td>`}).join('')}</tr>`).join('')||`<tr><td colspan="${cols.length}" class="empty">No jobcards match</td></tr>`}</tbody>`;
@@ -587,13 +575,8 @@ $('fMonth').onchange=e=>{S.month=e.target.value;$('fFrom').value=$('fTo').value=
 document.querySelectorAll('select[data-k]').forEach(s=>s.onchange=()=>{S.f[s.dataset.k]=s.value;S.jp=0;render()});
 $('chips').onclick=e=>{const x=e.target.dataset.x;if(!x)return;if(x==='dates')$('fFrom').value=$('fTo').value='';else if(x==='pct'){S.pmin=0;S.pmax=S.pcap}else S.f[x]='';render()};
 $('reset').onclick=()=>{Object.keys(S.f).forEach(k=>S.f[k]='');$('fFrom').value=$('fTo').value=$('jSearch').value='';$('jOver').checked=false;S.pmin=0;S.pmax=S.pcap;S.month=S.months[0];$('fMonth').value=S.month;S.jp=0;render()};
-// sliders
-let rT;const rerender=()=>{clearTimeout(rT);rT=setTimeout(render,60)};
-$('sTgt').oninput=e=>{S.tgt=+e.target.value;ls.set('tgt',S.tgt);syncSliders();rerender()};
-$('sPmin').oninput=e=>{S.pmin=Math.min(+e.target.value,S.pmax);S.jp=0;syncSliders();rerender()};
-$('sPmax').oninput=e=>{S.pmax=Math.max(+e.target.value,S.pmin);S.jp=0;syncSliders();rerender()};
-$('sMin').oninput=e=>{S.minv=+e.target.value;ls.set('minv',S.minv);syncSliders();rerender()};
-$('sTop').oninput=e=>{S.topn=+e.target.value;ls.set('topn',S.topn);syncSliders();rerender()};
+// target setting in header
+$('tgtInput').oninput=e=>{S.tgt=+e.target.value;ls.set('tgt',S.tgt);render()};
 $('ftog').onclick=()=>{const f=$('filters');f.classList.toggle('col');$('ftog').textContent=f.classList.contains('col')?'More filters':'Fewer filters'};
 if(matchMedia('(max-width:760px)').matches)$('filters').classList.add('col');
 $('trSeg').onclick=e=>{const b=e.target.closest('button');if(b){S.trend=b.dataset.v;render()}};
