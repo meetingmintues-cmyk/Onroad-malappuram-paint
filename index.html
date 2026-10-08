@@ -432,7 +432,7 @@ function buildDimPages(){$('dimPages').innerHTML=DIMS.map(d=>`
   </div>
 </section>`).join('')}
 function buildMonth(){$('fMonth').innerHTML=S.months.map(m=>`<option value="${m}">${mlabel(m)}</option>`).join('')+'<option value="all">All months</option>';$('fMonth').value=S.month}
-function buildSelects(){const b=base();document.querySelectorAll('select[data-k]').forEach(sel=>{const k=sel.dataset.k;sel.closest('label').hidden=(k==='mkt'&&!S.hasMkt)||(k==='cat'&&!S.hasCat);const u=[...new Set(b.map(r=>r[k]))].sort();if(S.f[k]&&!u.includes(S.f[k]))S.f[k]='';sel.innerHTML=`<option value="">All</option>`+u.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');sel.value=S.f[k]})}
+function buildSelects(){const b=S.month==='all'?S.rows:base();document.querySelectorAll('select[data-k]').forEach(sel=>{const k=sel.dataset.k;sel.closest('label').hidden=(k==='mkt'&&!S.hasMkt)||(k==='cat'&&!S.hasCat);const u=[...new Set(b.map(r=>r[k]))].sort();if(S.f[k]&&!u.includes(S.f[k]))S.f[k]='';sel.innerHTML=`<option value="">All</option>`+u.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');sel.value=S.f[k]})}
 function syncControls(){
   const ch=[];Object.entries(S.f).forEach(([k,v])=>{if(v){const d=DIMS.find(x=>x.key===k);ch.push(`<span class="chip">${d.title}: ${esc(v)}<button data-x="${k}" aria-label="Remove">×</button></span>`)}});
   if($('fFrom').value||$('fTo').value)ch.push(`<span class="chip">Dates: ${$('fFrom').value||'…'} → ${$('fTo').value||'…'}<button data-x="dates">×</button></span>`);
