@@ -397,8 +397,8 @@ function apply(rows,at,first){const prevMonths=S.months?S.months.join():'';S.row
 
 /* ================= AGGREGATION ================= */
 // Consumption % = paint amount ÷ labour (excl. tax), counting only jobcards that have a paint amount entered
-function tot(rs){const j=new Set();let lab=0,cons=0,pan=0,full=0,fullCons=0,labP=0,pj=0;rs.forEach(r=>{j.add(r.job||('#'+r.i));lab+=r.lab||0;pan+=r.pan||0;if(r.cons!=null){cons+=r.cons;labP+=r.lab||0;pj++}if(/full/i.test(r.cat)){full++;fullCons+=r.cons||0}});
-  const veh=j.size;return{veh,lab,cons,pan,full,fullCons,labP,pj,n:rs.length,pct:labP?cons/labP*100:null,lpv:veh?lab/veh:null,cpv:pj?cons/pj:null,cpp:pan?cons/pan:null}}
+function tot(rs){const j=new Set();let lab=0,cons=0,pan=0,full=0,fullCons=0,pj=0;rs.forEach(r=>{j.add(r.job||('#'+r.i));lab+=r.lab||0;pan+=r.pan||0;if(r.cons!=null){cons+=r.cons;pj++}if(/full/i.test(r.cat)){full++;fullCons+=r.cons||0}});
+  const veh=j.size;return{veh,lab,cons,pan,full,fullCons,pj,n:rs.length,pct:lab?cons/lab*100:null,lpv:veh?lab/veh:null,cpv:pj?cons/pj:null,cpp:pan?cons/pan:null}}
 function group(rs,key){const m=new Map();rs.forEach(r=>{const k=r[key];(m.get(k)||m.set(k,[]).get(k)).push(r)});const T=tot(rs);return[...m].map(([name,g])=>{const t=tot(g);return{name,...t,share:T.lab?t.lab/T.lab*100:0,pshare:T.cons?t.cons/T.cons*100:0}})}
 function base(){let rs=S.rows;if(S.month!=='all')rs=rs.filter(r=>mkey(r.date)===S.month);return rs}
 const pOn=()=>S.pmin>0||S.pmax<S.pcap;
